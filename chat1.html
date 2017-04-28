@@ -12,7 +12,7 @@
   <div class="row" style="height:550px;margin:50px" id="chatapp">
         <div class="col-sm-7" style="background-color:#B9F6CA;overflow:scroll;">
           Your Receiver:<span class="receiver-holder"></span>
-          <div class="messages" style="height:550px"></div>
+          <div id="messages" style="height:550px"></div>
           <div class="row">
             <input type="text" class=" col-sm-8 form-control" id="mtext" style="width:605px;margin-left:10px"></input>
             <button id="msend" type="button" class="col-sm-1 btn btn-danger" style="width:57px;margin-left:4px" >Send</button>
@@ -21,6 +21,7 @@
         <div class="col-sm-5" style="background-color:#3F51B5;overflow:scroll;height:610px">
           <div class="user-name">
             Your name is : <span class="user-name-bold"></span>
+            Your status: <span class="status-bold"></span>
           </div>
 
           <div id="user-list">
@@ -29,11 +30,18 @@
       </div>
 
   <!-- Templates -->
-  <script type="text/template" id="item-template">
+  <script type="text/template" id="user-template">
     <div class="view">
       
       <label><%- name %></label>
       <label><%- status %></label>
+      
+    </div>
+  </script>  
+  <script type="text/template" id="message-template">
+    <div class="view">
+      
+      <label><%- text %></label>
       
     </div>
   </script>  
@@ -61,36 +69,44 @@
     });
     app.Message=Backbone.Model.extend({
       defaults: {
-        sender:'',
-        receiver:'',
         text:''
       }
     });
-
-    app.UserList = Backbone.Collection.extend({
-      model: app.User,
-      localStorage: new Backbone.LocalStorage("userlist"),
-    });
-    app.MessageList = Backbone.Collection.extend({
-      model: app.Message,
-      localStorage: new Backbone.LocalStorage(function(){
-        if(myname>myreceiver){
+    var generatekey=function(){
+      if(myname>myreceiver){
           var k=myname+myreceiver;
         }
         else{
           var k=myreceiver+myname;
         }
         return k;
-      }),
-       
+    }
+    app.UserList = Backbone.Collection.extend({
+      model: app.User,
+      localStorage: new Backbone.LocalStorage("people"),
     });
-  
+    app.MessageList = Backbone.Collection.extend({
+      model: app.Message,
+      localStorage: new Backbone.LocalStorage(generatekey()),
+    });
+    app.MessageView=Backbone.View.extend({
+      tagname:'div',
+      template:_.template($('#message-template').html()),
+      render: function(){
+        this.$el.html(this.template(this.model.toJSON()));
+        return this; 
+      },
+      initialize: function(){
+        this.model.on('change', this.render, this);
+        this.model.on('destroy', this.remove, this); 
+      }
+    });
     app.userList = new app.UserList();
-  
+    app.messageList = new app.MessageList();
     app.UserView = Backbone.View.extend({
       tagName: 'div',
     
-      template: _.template($('#item-template').html()),
+      template: _.template($('#user-template').html()),
       events: {
         'dblclick label' : 'addreceiver',
       },
@@ -105,21 +121,47 @@
       addreceiver:function(e){
         e.preventDefault();
         myreceiver= this.model.get("name");
-        console.log(myreceiver);
+        console.log(myreceiver+" "+myname);
+        app.messageList = new app.MessageList();
+        app.messageList.fetch();
+        $('.receiver-holder').html(myreceiver);
+        //app.MessageListView.addAll();
       }
-      
     });
-    app.AppView = Marionette.View.extend({
+    app.MessageListView=Backbone.View.extend({
+      el: '#chatapp',
+      initialize: function () {
+        app.messageList.on('add', this.addAll, this);
+        app.messageList.on('reset', this.addAll, this);
+        app.messageList.fetch();
+      },
+      createMessage: function(){
+        app.messageList.create(this.newAttributes());
+      },
+      addOne: function(message){
+        var view = new app.MessageView({model: message});
+        $('#messages').append(view.render().el);
+      },
+      addAll: function(){
+        this.$('#messages').html(''); 
+        app.messageList.each(this.addOne, this);
+        
+      },
+      newAttributes: function(){
+        return {
+          text: this.$('#mtext').val(),
+        }
+      }
+    });
+    app.UserListView = Marionette.View.extend({
       el: '#chatapp',
       initialize: function () {
         app.userList.on('add', this.addAll, this);
         app.userList.on('reset', this.addAll, this);
-        app.userList.on('change', this.addAll, this);
         app.userList.fetch();
         this.createUser();
       },
       createUser: function(){
-        
         app.userList.create(this.newAttributes());
       },
       addOne: function(user){
@@ -140,17 +182,22 @@
     });
     var updateuserlist=function(){
         setInterval(function(){
-          app.userList.remove();
-          console.log(app.userList.length);
+          window.LocalStorage.refresh();
           app.userList.fetch();
-          console.log(app.userList.length);
           }, 2000);
     }
     $(document).ready(function(){
       myname=prompt('What is your name?', 'name');
       mystatus=prompt('What is your status?', 'status');
-      app.appView = new app.AppView(); 
+      $('.user-name-bold').html(myname);
+      $('.status-bold').html(mystatus);
+      app.UserListView = new app.UserListView(); 
       updateuserlist();
+      app.MessageListView = new app.MessageListView();
+      $('#msend').click(function(){
+         app.MessageListView.createMessage();
+         app.MessageListView.addAll();
+      });
     });
 
   </script>
