@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <title>Chat App in Backbone.js</title>
+  
+</head>
+<body>
+
+  <div class="row" style="height:550px;margin:50px" id="chatapp">
+        <div class="col-sm-7" style="background-color:#B9F6CA;overflow:scroll;">
+          Your Receiver:<span class="receiver-holder"></span>
+          <div class="messages" style="height:550px"></div>
+          <div class="row">
+            <input type="text" class=" col-sm-8 form-control" id="mtext" style="width:605px;margin-left:10px"></input>
+            <button id="msend" type="button" class="col-sm-1 btn btn-danger" style="width:57px;margin-left:4px" >Send</button>
+          </div>
+        </div>
+        <div class="col-sm-5" style="background-color:#3F51B5;overflow:scroll;height:610px">
+          <div class="user-name">
+            Your name is : <span class="user-name-bold"></span>
+          </div>
+
+          <div id="user-list">
+          </div>
+        </div>
+      </div>
+
+  <!-- Templates -->
+  <script type="text/template" id="item-template">
+    <div class="view">
+      
+      <label><%- name %></label>
+      <label><%- status %></label>
+      
+    </div>
+  </script>  
+
+
+  <script src="vendor/jquery.js"></script>
+  <script src="vendor/underscore.js"></script>
+  <script src="vendor/backbone.js"></script>
+  <script src="vendor/backbone.localStorage.js"></script>
+  <script src="vendor/backbone.radio.js"></script>
+  <script src="vendor/backbone.marionette.min.js"></script>
+
+
+    
+  <script type="text/javascript">
+    'use strict';
+    var app = {}; 
+    var myreceiver,myname,mystatus;
+    
+    app.User = Backbone.Model.extend({
+      defaults: {
+        name: '',
+        status: ''
+      }
+    });
+    app.Message=Backbone.Model.extend({
+      defaults: {
+        sender:'',
+        receiver:'',
+        text:''
+      }
+    });
+
+    app.UserList = Backbone.Collection.extend({
+      model: app.User,
+      localStorage: new Backbone.LocalStorage("userlist"),
+    });
+    app.MessageList = Backbone.Collection.extend({
+      model: app.Message,
+      localStorage: new Backbone.LocalStorage(function(){
+        if(myname>myreceiver){
+          var k=myname+myreceiver;
+        }
+        else{
+          var k=myreceiver+myname;
+        }
+        return k;
+      }),
+       
+    });
+  
+    app.userList = new app.UserList();
+  
+    app.UserView = Backbone.View.extend({
+      tagName: 'div',
+    
+      template: _.template($('#item-template').html()),
+      events: {
+        'dblclick label' : 'addreceiver',
+      },
+      render: function(){
+        this.$el.html(this.template(this.model.toJSON()));
+        return this; 
+      },
+      initialize: function(){
+        this.model.on('change', this.render, this);
+        this.model.on('destroy', this.remove, this); 
+      },
+      addreceiver:function(e){
+        e.preventDefault();
+        myreceiver= this.model.get("name");
+        console.log(myreceiver);
+      }
+      
+    });
+    app.AppView = Marionette.View.extend({
+      el: '#chatapp',
+      initialize: function () {
+        app.userList.on('add', this.addAll, this);
+        app.userList.on('reset', this.addAll, this);
+        app.userList.on('change', this.addAll, this);
+        app.userList.fetch();
+        this.createUser();
+      },
+      createUser: function(){
+        
+        app.userList.create(this.newAttributes());
+      },
+      addOne: function(user){
+        var view = new app.UserView({model: user});
+        $('#user-list').append(view.render().el);
+      },
+      addAll: function(){
+        this.$('#user-list').html(''); 
+        app.userList.each(this.addOne, this);
+        
+      },
+      newAttributes: function(){
+        return {
+          name: myname,
+          status: mystatus
+        }
+      }
+    });
+    var updateuserlist=function(){
+        setInterval(function(){
+          app.userList.remove();
+          console.log(app.userList.length);
+          app.userList.fetch();
+          console.log(app.userList.length);
+          }, 2000);
+    }
+    $(document).ready(function(){
+      myname=prompt('What is your name?', 'name');
+      mystatus=prompt('What is your status?', 'status');
+      app.appView = new app.AppView(); 
+      updateuserlist();
+    });
+
+  </script>
+  
+</body>
+</html>
