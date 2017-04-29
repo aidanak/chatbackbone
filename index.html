@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <title>Chat App in Backbone.js</title>
+  </head>
+  <body>
+    <div class="row" style="height:550px;margin:50px" id="chatapp">
+        <div class="col-sm-7" style="background-color:#B9F6CA;overflow:scroll;">
+          <div id="chat" style="height:550px">
+            <script type="x-template/underscore" id="messageView">
+            <label id = 'messageAuthor'><%= author%></label>  
+            <label id = 'messageText'><%= text%></label>    
+            <label id = 'messageDate'><%= date%></label>  
+            <img id="messageEdit" src="img/edit.png" style="height:16px;width:16px">
+            <img id="messageDelete" src="img/delete.png" style="height:16px;width:16px">
+        </script> 
+          </div>
+          <div class="row" id = "textbox"> 
+              <input type="text" id = "messageInput" style="width:450px;margin-left:10px">
+              <img id="sendMessage" src="img/send.png" for="messageInput" style="height:32px;width:32px;margin-left:10px;margin-right:10px">
+              <img id="searchMessage" src="img/search.png" style="height:24px;width:24px">
+              <img class="smile" src="img/bad.png" style="height:32px;width:32px">
+              <img class="smile" src="img/angry.png" style="height:32px;width:32px">
+              <img class="smile" src="img/sad.png" style="height:32px;width:32px">
+          </div>
+        </div>
+        <div class="col-sm-5" style="background-color:#3F51B5;overflow:scroll;height:610px">
+          <div id="menu" class="row">
+            <center><h4 class="title">Your username:<label id="userName"></label><img id="resetusername" src="img/reset.png" style="height:16px;width:16px;margin:5px"></h4></center>
+            <center><h4 class="status">Your status:<label id="userStatus"></label><img id="resetstatus" src="img/reset.png" style="height:16px;width:16px;margin:5px"></h4></center>
+          </div>
+          <div id="chatslist">
+            <script type="x-template/underscore" id="contactView">
+              <div class = "friend">
+                <label class="contact"><a class="single"><%= name %></a></label>
+                <label class = "contactStatus"><%= status %></label>
+                <label class = "lastActiveDate"><%= lastActiveDate %></label>
+                <img id="trash" src="img/cross.png" style="height:12px;width:12px">
+              </div>
+            </script> 
+          </div>
+        </div>
+      </div>
+      <script src="vendor/jquery.js"></script>
+      <script src="vendor/json2.js"></script>
+      <script src="vendor/underscore.js"></script>
+      <script src="vendor/backbone.js"></script>
+      <script src="vendor/backbone.radio.js"></script>
+      <script src="vendor/backbone.marionette.min.js"></script>
+      <script type="text/javascript" src="jquery.js"></script>
+      <script type="text/javascript" src="localstorage.js"></script>
+      <script type="text/javascript" src="modelsandcollections.js"></script>
+      <script type="text/javascript" src="messagesview.js"></script>
+      <script type="text/javascript" src="usersview.js"></script>
+      <script type="text/javascript" src="app.js"></script>
+  </body>
+</html> 
